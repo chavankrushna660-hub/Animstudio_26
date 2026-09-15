@@ -497,13 +497,12 @@
 
 /* =========================================================
    USER MANDATES:
-   1. Toolbar: NO background (transparent), and an extremely light, subtle, almost negligible border (1px solid rgba(0, 0, 0, 0.08)) on components/buttons.
+   1. Toolbar: NO background (transparent), with an extremely light, subtle, almost negligible border (1px solid rgba(0, 0, 0, 0.08)) on components/buttons.
    2. Timeline: White background on all components, with an extremely light, subtle, almost negligible border (1px solid rgba(0, 0, 0, 0.08)) on components and buttons.
-   3. Right Panel: All elements have an extremely light, subtle, almost negligible border (1px solid rgba(0, 0, 0, 0.08)) on white background.
-   4. Left Panel: Clean subtle 1px border on white background.
+   3. Right Panel & Left Panel: White background, with an extremely light, subtle, almost negligible border (1px solid rgba(0, 0, 0, 0.08)) on all elements, buttons, inputs, and cards.
+   4. STRICTLY Left & Right Panels: Text size increased and made bolder (font-weight 800-900). Elements expand naturally according to text without escaping the panels.
    5. Active tools/buttons: Yellow highlight without glow.
    6. Zoom tool: Kept as a single tool without separate popups/options.
-   7. Crisp, bold black text and high contrast throughout.
    ========================================================= */
 
 #anim-root,
@@ -659,6 +658,78 @@
   box-shadow: none !important;
 }
 
+/* =========================================================
+   6. STRICTLY LEFT & RIGHT PANELS:
+      - TEXT SIZE INCREASED
+      - BOLDER TYPOGRAPHY (FONT-WEIGHT 800 - 900)
+      - ELEMENTS EXPAND TO FIT TEXT CONTENT CLEANLY
+      - STRICT PANEL CONTAINMENT (CANNOT ESCAPE OR OVERFLOW)
+   ========================================================= */
+
+#left-layers-panel-container,
+#left-layers-panel-container *,
+#right-properties-panel-container,
+#right-properties-panel-container * {
+  font-weight: 800 !important;
+  box-sizing: border-box !important;
+}
+
+#left-layers-panel-container h1,
+#left-layers-panel-container h2,
+#left-layers-panel-container h3,
+#left-layers-panel-container h4,
+#left-layers-panel-container [class*="font-black"],
+#right-properties-panel-container h1,
+#right-properties-panel-container h2,
+#right-properties-panel-container h3,
+#right-properties-panel-container h4,
+#right-properties-panel-container [class*="font-black"] {
+  font-weight: 900 !important;
+}
+
+/* Scale up text classes strictly inside Left and Right panels */
+#left-layers-panel-container [class*="text-[8px]"],
+#left-layers-panel-container [class*="text-[9px]"],
+#left-layers-panel-container [class*="text-[10px]"],
+#right-properties-panel-container [class*="text-[8px]"],
+#right-properties-panel-container [class*="text-[9px]"],
+#right-properties-panel-container [class*="text-[10px]"] {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+#left-layers-panel-container [class*="text-[11px]"],
+#left-layers-panel-container [class*="text-xs"],
+#right-properties-panel-container [class*="text-[11px]"],
+#right-properties-panel-container [class*="text-xs"] {
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
+
+#left-layers-panel-container [class*="text-sm"],
+#right-properties-panel-container [class*="text-sm"] {
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+}
+
+#left-layers-panel-container [class*="text-base"],
+#right-properties-panel-container [class*="text-base"] {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+}
+
+/* Generic text tags in left/right panels without explicit text-* class */
+#left-layers-panel-container span:not([class*="text-"]):not([writing-mode]),
+#left-layers-panel-container p:not([class*="text-"]),
+#left-layers-panel-container label:not([class*="text-"]),
+#left-layers-panel-container button:not([class*="text-"]),
+#right-properties-panel-container span:not([class*="text-"]),
+#right-properties-panel-container p:not([class*="text-"]),
+#right-properties-panel-container label:not([class*="text-"]),
+#right-properties-panel-container button:not([class*="text-"]) {
+  font-size: 13.5px;
+}
+
 /* Strict containment: Prevent any overflow or element escaping panels */
 #left-layers-panel-container,
 #right-properties-panel-container {
@@ -676,6 +747,37 @@
 #right-properties-panel-container * {
   box-sizing: border-box !important;
   max-width: 100% !important;
+}
+
+/* Elements expand height naturally to fit text without expanding beyond panel width */
+#left-layers-panel-container button:not(#left-panel-toggle-btn):not(.card-action-btn),
+#right-properties-panel-container button:not(#right-panel-toggle-btn):not(.card-action-btn),
+#left-layers-panel-container .drawing-card-item,
+#left-layers-panel-container .layer-card-item,
+#right-properties-panel-container .drawing-card-item,
+#right-properties-panel-container .layer-card-item {
+  min-height: fit-content !important;
+  height: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+
+#left-layers-panel-container input,
+#left-layers-panel-container select,
+#right-properties-panel-container input,
+#right-properties-panel-container select {
+  min-height: 34px !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 /* High Opacity & Bold Typography Across Entire App */
@@ -737,8 +839,7 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border: none !important;
-  border-width: 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 6px !important;
   box-shadow: none !important;
   flex-shrink: 0 !important;
@@ -787,7 +888,7 @@
   margin-left: 0 !important;
   margin-right: 0 !important;
   flex-shrink: 0 !important;
-  border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Ensure no negative margins causing overlaps */

@@ -4172,17 +4172,6 @@ export default function App() {
             </button>
           )}
 
-          {/* DOWNLOAD ANDROID APK */}
-          <a
-            href="/AnimStudio.apk"
-            download="AnimStudio.apk"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-850 hover:bg-neutral-800 text-white font-black text-xs sm:text-sm transition-all cursor-pointer shrink-0 shadow-md border-2 border-neutral-700 hover:border-amber-400"
-            title="Download Android APK"
-          >
-            <Smartphone className="w-4.5 h-4.5 stroke-[2.6] shrink-0 text-amber-400" />
-            <span className="inline uppercase tracking-wider font-black">APK</span>
-          </a>
-
           <div className="w-[2px] h-7 bg-neutral-800 mx-1 shrink-0"></div>
 
           {/* Database Storage Quota Trigger */}
