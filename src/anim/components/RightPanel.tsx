@@ -1789,18 +1789,28 @@ function RightPanel({
   };
 
   // AI Smooth Motion & Loop Generator handlers
-  const [hasBackup, setHasBackup] = useState(!!localStorage.getItem('generator_original_frames_backup'));
+  const [hasBackup, setHasBackup] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && !!window.localStorage && !!localStorage.getItem('generator_original_frames_backup');
+    } catch {
+      return false;
+    }
+  });
 
   const handleRestoreBackup = () => {
-    const backup = localStorage.getItem('generator_original_frames_backup');
-    if (backup) {
-      const parsed = JSON.parse(backup);
-      setFrames(parsed);
-      if (parsed[0]) {
-        setObjects(parsed[0].objects);
+    try {
+      const backup = localStorage.getItem('generator_original_frames_backup');
+      if (backup) {
+        const parsed = JSON.parse(backup);
+        setFrames(parsed);
+        if (parsed[0]) {
+          setObjects(parsed[0].objects);
+        }
+        setCurrentFrameIndex(0);
+        alert("Successfully restored original reference frames!");
       }
-      setCurrentFrameIndex(0);
-      alert("Successfully restored original reference frames!");
+    } catch (e) {
+      console.warn("Storage restore error", e);
     }
   };
 
@@ -1848,8 +1858,12 @@ function RightPanel({
     }
 
     // Save backup first
-    localStorage.setItem('generator_original_frames_backup', JSON.stringify(frames));
-    setHasBackup(true);
+    try {
+      localStorage.setItem('generator_original_frames_backup', JSON.stringify(frames));
+      setHasBackup(true);
+    } catch (e) {
+      console.warn('Storage backup note:', e);
+    }
 
     const startFrameObjects = frames[startIdx].objects;
     const endFrameObjects = frames[endIdx].objects;
@@ -2039,8 +2053,12 @@ function RightPanel({
     const M = refEnd - refStart + 1;
 
     // Save backup first
-    localStorage.setItem('generator_original_frames_backup', JSON.stringify(frames));
-    setHasBackup(true);
+    try {
+      localStorage.setItem('generator_original_frames_backup', JSON.stringify(frames));
+      setHasBackup(true);
+    } catch (e) {
+      console.warn('Storage backup note:', e);
+    }
 
     const startFrameObjects = frames[refStart].objects;
     const endFrameObjects = frames[endPosIdx].objects;
