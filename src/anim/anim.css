@@ -417,10 +417,115 @@
 #anim-root input::placeholder {
   color: var(--txt2) !important;
 }
-#anim-root input[type="range"] {
-  accent-color: var(--accent);
-  background: var(--s3) !important;
+
+/* =========================================================================
+   STRICT UNIVERSAL SLIDER STYLING (ENTIRE APP, LEFT & RIGHT PANELS)
+   Thick black line track, white slider knob with thick black border & point
+   ========================================================================= */
+#anim-root input[type="range"],
+input[type="range"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 24px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
+
+/* WebKit Track: thick solid black line */
+#anim-root input[type="range"]:not(.color-hue-slider)::-webkit-slider-runnable-track,
+input[type="range"]:not(.color-hue-slider)::-webkit-slider-runnable-track {
+  width: 100% !important;
+  height: 6px !important;
+  cursor: pointer !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
+  border-radius: 9999px !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+/* WebKit Thumb: White knob with thick black border and black center point */
+#anim-root input[type="range"]::-webkit-slider-thumb,
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  height: 20px !important;
+  width: 20px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 4px solid #000000 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 0 0 2px #000000 !important;
+  cursor: pointer !important;
+  margin-top: -7px !important;
+  transition: transform 0.1s ease !important;
+}
+
+#anim-root input[type="range"]::-webkit-slider-thumb:hover,
+#anim-root input[type="range"]:active::-webkit-slider-thumb,
+input[type="range"]::-webkit-slider-thumb:hover,
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.15) !important;
+  background: #ffffff !important;
+  border: 4px solid #000000 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), inset 0 0 0 3px #000000 !important;
+}
+
+/* Firefox Track */
+#anim-root input[type="range"]:not(.color-hue-slider)::-moz-range-track,
+input[type="range"]:not(.color-hue-slider)::-moz-range-track {
+  width: 100% !important;
+  height: 6px !important;
+  cursor: pointer !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
+  border-radius: 9999px !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+}
+
+/* Firefox Thumb */
+#anim-root input[type="range"]::-moz-range-thumb,
+input[type="range"]::-moz-range-thumb {
+  height: 20px !important;
+  width: 20px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 4px solid #000000 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 0 0 2px #000000 !important;
+  cursor: pointer !important;
+  transition: transform 0.1s ease !important;
+}
+
+/* Hue Slider Rainbow Exception */
+#anim-root input.color-hue-slider::-webkit-slider-runnable-track,
+input.color-hue-slider::-webkit-slider-runnable-track {
+  width: 100% !important;
+  height: 14px !important;
+  border-radius: 7px !important;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+}
+#anim-root input.color-hue-slider::-webkit-slider-thumb,
+input.color-hue-slider::-webkit-slider-thumb {
+  margin-top: -3px !important;
+}
+#anim-root input.color-hue-slider::-moz-range-track,
+input.color-hue-slider::-moz-range-track {
+  width: 100% !important;
+  height: 14px !important;
+  border-radius: 7px !important;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+}
+
 #anim-root input[type="checkbox"] {
   accent-color: var(--accent);
 }
@@ -570,16 +675,16 @@
 }
 
 /* All elements in Right Panel and Left Panel: cards, inputs, selects, buttons, containers */
-#right-properties-panel-container [class*="rounded-"]:not(span):not(svg):not(.card-actions-row),
-#right-properties-panel-container button,
-#right-properties-panel-container input,
+#right-properties-panel-container [class*="rounded-"]:not(span):not(svg):not(.card-actions-row):not(.anim-colorpicker):not(.anim-colorpicker *):not(.color-swatch-btn):not(.color-box-canvas):not(.color-sat-val-box),
+#right-properties-panel-container button:not(.anim-colorpicker *):not(.color-swatch-btn),
+#right-properties-panel-container input:not([type="range"]):not(.anim-colorpicker *),
 #right-properties-panel-container select,
 #right-properties-panel-container textarea,
 #right-properties-panel-container .drawing-card-item,
 #right-properties-panel-container .layer-card-item,
-#left-layers-panel-container [class*="rounded-"]:not(span):not(svg):not(.card-actions-row),
-#left-layers-panel-container button,
-#left-layers-panel-container input,
+#left-layers-panel-container [class*="rounded-"]:not(span):not(svg):not(.card-actions-row):not(.anim-colorpicker):not(.anim-colorpicker *):not(.color-swatch-btn):not(.color-box-canvas):not(.color-sat-val-box),
+#left-layers-panel-container button:not(.anim-colorpicker *):not(.color-swatch-btn),
+#left-layers-panel-container input:not([type="range"]):not(.anim-colorpicker *),
 #left-layers-panel-container select,
 #left-layers-panel-container textarea,
 #left-layers-panel-container .drawing-card-item,
@@ -896,3 +1001,87 @@
 #right-properties-panel-container [class*="-m"] {
   margin: 0 !important;
 }
+
+/* =========================================================
+   THICKER & BIGGER TYPOGRAPHY ENHANCEMENT
+   All text bigger font size and thicker (very thicker and bigger)
+   ========================================================= */
+#anim-root {
+  font-weight: 800 !important;
+}
+
+#anim-root span,
+#anim-root p,
+#anim-root label,
+#anim-root button,
+#anim-root input,
+#anim-root select {
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+}
+
+/* Make headings, titles, buttons and labels ultra-thick (900) and noticeably larger */
+#anim-root h1,
+#anim-root h2,
+#anim-root h3,
+#anim-root h4,
+#anim-root .font-black,
+#anim-root .font-bold,
+#anim-root button,
+#anim-root label,
+#anim-root strong {
+  font-weight: 900 !important;
+}
+
+/* Scale up text sizes across the app */
+#anim-root .text-\[8px\],
+#anim-root .text-\[9px\] {
+  font-size: 11.5px !important;
+  font-weight: 900 !important;
+  line-height: 1.3 !important;
+}
+
+#anim-root .text-\[10px\],
+#anim-root .text-\[11px\] {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.3 !important;
+}
+
+#anim-root .text-xs {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+}
+
+#anim-root .text-sm {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+}
+
+#anim-root .text-base {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+}
+
+#anim-root .text-lg {
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+}
+
+/* Tool buttons, panels, toolbar icons and labels */
+#anim-toolbar-container button span {
+  font-weight: 900 !important;
+}
+
+#anim-toolbar-container svg {
+  stroke-width: 3.2px !important;
+}
+
+#anim-toolbar-container button[data-active-tool="true"] svg {
+  stroke-width: 3.8px !important;
+}
+

@@ -343,6 +343,209 @@ export function renderBrushSegment(
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
       }
+    } else if (brushType === 'spray') {
+      // Spray Paint Splatter Droplets (exactly matches spray icon)
+      ctx.fillStyle = baseColor;
+      const radius = Math.max(6, baseWidth * 1.8);
+      const density = Math.min(25, Math.max(8, Math.floor(baseWidth * 1.2)));
+
+      for (let i = 0; i < seg.length; i++) {
+        const pt = seg[i];
+        for (let d = 0; d < density; d++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.pow(Math.random(), 0.7) * radius;
+          const sx = pt.x + Math.cos(angle) * dist;
+          const sy = pt.y + Math.sin(angle) * dist;
+          const dropSize = Math.max(0.6, Math.random() * (baseWidth * 0.35));
+          ctx.beginPath();
+          ctx.arc(sx, sy, dropSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    } else if (brushType === 'dotted') {
+      // Precision Round Dotted Line (exactly matches dotted icon)
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = baseWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([0.1, Math.max(6, baseWidth * 2.5)]);
+      ctx.beginPath();
+      if (seg.length === 1) {
+        ctx.arc(seg[0].x, seg[0].y, baseWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+      } else {
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) {
+          const xc = (seg[i].x + seg[i - 1].x) / 2;
+          const yc = (seg[i].y + seg[i - 1].y) / 2;
+          ctx.quadraticCurveTo(seg[i - 1].x, seg[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(seg[seg.length - 1].x, seg[seg.length - 1].y);
+        ctx.stroke();
+      }
+    } else if (brushType === 'dashed') {
+      // Precision Dashed Line (exactly matches dashed icon)
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = baseWidth;
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'miter';
+      ctx.setLineDash([Math.max(6, baseWidth * 2.2), Math.max(4, baseWidth * 1.5)]);
+      ctx.beginPath();
+      if (seg.length === 1) {
+        ctx.fillRect(seg[0].x - baseWidth, seg[0].y - baseWidth / 2, baseWidth * 2, baseWidth);
+      } else {
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) {
+          const xc = (seg[i].x + seg[i - 1].x) / 2;
+          const yc = (seg[i].y + seg[i - 1].y) / 2;
+          ctx.quadraticCurveTo(seg[i - 1].x, seg[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(seg[seg.length - 1].x, seg[seg.length - 1].y);
+        ctx.stroke();
+      }
+    } else if (brushType === 'crayon') {
+      // Wax Crayon Stippled Texture (exactly matches crayon icon)
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = baseWidth * 1.1;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      if (seg.length === 1) {
+        ctx.arc(seg[0].x, seg[0].y, baseWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+      } else {
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) {
+          const xc = (seg[i].x + seg[i - 1].x) / 2;
+          const yc = (seg[i].y + seg[i - 1].y) / 2;
+          ctx.quadraticCurveTo(seg[i - 1].x, seg[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(seg[seg.length - 1].x, seg[seg.length - 1].y);
+        ctx.stroke();
+      }
+
+      // Inner stippled wax core
+      ctx.setLineDash([]);
+      ctx.lineWidth = Math.max(1, baseWidth * 0.5);
+      ctx.globalAlpha = Math.min(1, ctx.globalAlpha * 0.7);
+      ctx.stroke();
+    } else if (brushType === 'ribbon') {
+      // 3D Twisted Ribbon Band (exactly matches ribbon icon)
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'round';
+
+      for (let i = 1; i < seg.length; i++) {
+        const p1 = seg[i - 1];
+        const p2 = seg[i];
+        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) + Math.PI / 2;
+        const w = baseWidth * 0.9;
+        const phase = Math.sin(i * 0.35);
+
+        const nx = Math.cos(angle) * w;
+        const ny = Math.sin(angle) * w;
+
+        // Front ribbon
+        ctx.beginPath();
+        ctx.moveTo(p1.x - nx, p1.y - ny);
+        ctx.lineTo(p2.x - nx, p2.y - ny);
+        ctx.lineTo(p2.x + nx * phase, p2.y + ny * phase);
+        ctx.lineTo(p1.x + nx * phase, p1.y + ny * phase);
+        ctx.closePath();
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+
+        // Shaded side
+        ctx.beginPath();
+        ctx.moveTo(p1.x + nx * phase, p1.y + ny * phase);
+        ctx.lineTo(p2.x + nx * phase, p2.y + ny * phase);
+        ctx.lineTo(p2.x + nx, p2.y + ny);
+        ctx.lineTo(p1.x + nx, p1.y + ny);
+        ctx.closePath();
+        ctx.fillStyle = '#475569';
+        ctx.globalAlpha = Math.min(1, ctx.globalAlpha * 0.6);
+        ctx.fill();
+        ctx.globalAlpha = opacity;
+      }
+    } else if (brushType === 'organic') {
+      // Botanical Leaf Sprouting Stroke (exactly matches organic icon)
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = Math.max(1.5, baseWidth * 0.6);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      if (seg.length === 1) {
+        ctx.arc(seg[0].x, seg[0].y, baseWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+      } else {
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) {
+          const xc = (seg[i].x + seg[i - 1].x) / 2;
+          const yc = (seg[i].y + seg[i - 1].y) / 2;
+          ctx.quadraticCurveTo(seg[i - 1].x, seg[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(seg[seg.length - 1].x, seg[seg.length - 1].y);
+        ctx.stroke();
+
+        // Sprout decorative organic leaflets every few points
+        ctx.fillStyle = baseColor;
+        for (let i = 2; i < seg.length; i += 4) {
+          const p = seg[i];
+          const prev = seg[i - 1];
+          const angle = Math.atan2(p.y - prev.y, p.x - prev.x);
+          const side = (i % 8 === 2) ? 1 : -1;
+          const leafAngle = angle + (Math.PI / 3) * side;
+          const leafLen = Math.max(6, baseWidth * 1.5);
+          const lx = p.x + Math.cos(leafAngle) * leafLen;
+          const ly = p.y + Math.sin(leafAngle) * leafLen;
+
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.quadraticCurveTo(
+            p.x + Math.cos(leafAngle - 0.4 * side) * (leafLen * 0.6),
+            p.y + Math.sin(leafAngle - 0.4 * side) * (leafLen * 0.6),
+            lx, ly
+          );
+          ctx.quadraticCurveTo(
+            p.x + Math.cos(leafAngle + 0.4 * side) * (leafLen * 0.6),
+            p.y + Math.sin(leafAngle + 0.4 * side) * (leafLen * 0.6),
+            p.x, p.y
+          );
+          ctx.fill();
+        }
+      }
+    } else if (brushType === 'watercolor') {
+      // Multi-Tone Watercolor Wash (matches watercolor icon)
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = baseWidth * 1.6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalAlpha = Math.min(1, ctx.globalAlpha * 0.4);
+
+      ctx.beginPath();
+      if (seg.length === 1) {
+        ctx.arc(seg[0].x, seg[0].y, baseWidth * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+      } else {
+        ctx.moveTo(seg[0].x, seg[0].y);
+        for (let i = 1; i < seg.length; i++) {
+          const xc = (seg[i].x + seg[i - 1].x) / 2;
+          const yc = (seg[i].y + seg[i - 1].y) / 2;
+          ctx.quadraticCurveTo(seg[i - 1].x, seg[i - 1].y, xc, yc);
+        }
+        ctx.lineTo(seg[seg.length - 1].x, seg[seg.length - 1].y);
+        ctx.stroke();
+
+        // Inner saturated pigment layer
+        ctx.globalAlpha = Math.min(1, opacity * 0.75);
+        ctx.lineWidth = baseWidth * 0.8;
+        ctx.stroke();
+      }
     } else {
       // Solid Monoline Vector Brush (with optional Stamp Jitter)
       ctx.strokeStyle = baseColor;

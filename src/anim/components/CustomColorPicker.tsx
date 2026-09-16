@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Pipette, Check, X, Palette, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CustomColorPickerProps {
@@ -10,6 +10,7 @@ interface CustomColorPickerProps {
   disabled?: boolean;
   compact?: boolean;
   popover?: boolean;
+  inline?: boolean;
   triggerSize?: string;
 }
 
@@ -116,6 +117,7 @@ export default function CustomColorPicker({
   disabled = false,
   compact = false,
   popover = false,
+  inline = true,
   triggerSize = 'w-8 h-8'
 }: CustomColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -128,6 +130,7 @@ export default function CustomColorPicker({
   const [val, setVal] = useState(hsv.v);
 
   const satValRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDraggingSatVal = useRef(false);
 
   useEffect(() => {
@@ -143,6 +146,40 @@ export default function CustomColorPicker({
     }
   }, [color]);
 
+  const pureHueHex = hsvToHex(hue, 100, 100);
+
+  // Paint 2D mixed-color gradient to canvas (immune to CSS background overrides)
+  const drawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // 1. Base pure hue
+    ctx.fillStyle = pureHueHex;
+    ctx.fillRect(0, 0, w, h);
+
+    // 2. White to transparent horizontal gradient (Saturation: 0 at left -> 100 at right)
+    const whiteGrad = ctx.createLinearGradient(0, 0, w, 0);
+    whiteGrad.addColorStop(0, '#ffffff');
+    whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = whiteGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // 3. Black to transparent vertical gradient (Value/Brightness: 100 at top -> 0 at bottom)
+    const blackGrad = ctx.createLinearGradient(0, 0, 0, h);
+    blackGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    blackGrad.addColorStop(1, '#000000');
+    ctx.fillStyle = blackGrad;
+    ctx.fillRect(0, 0, w, h);
+  }, [pureHueHex]);
+
+  useEffect(() => {
+    drawCanvas();
+  }, [drawCanvas]);
+
   const updateColorFromHsv = (h: number, s: number, v: number) => {
     try {
       const newHex = hsvToHex(h, s, v);
@@ -154,6 +191,7 @@ export default function CustomColorPicker({
   };
 
   const handleSatValPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (disabled) return;
     try {
       isDraggingSatVal.current = true;
       if (e.target && typeof (e.target as HTMLElement).setPointerCapture === 'function') {
@@ -166,7 +204,7 @@ export default function CustomColorPicker({
   };
 
   const handleSatValMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingSatVal.current || !satValRef.current) return;
+    if (!isDraggingSatVal.current || !satValRef.current || disabled) return;
     try {
       const rect = satValRef.current.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
@@ -194,6 +232,7 @@ export default function CustomColorPicker({
   };
 
   const handleHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     try {
       const newHue = parseFloat(e.target.value);
       setHue(newHue);
@@ -204,6 +243,7 @@ export default function CustomColorPicker({
   };
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     try {
       const valStr = e.target.value;
       setHexInput(valStr);
@@ -222,6 +262,7 @@ export default function CustomColorPicker({
   };
 
   const selectPresetColor = (c: string) => {
+    if (disabled) return;
     try {
       const fullHex = safeHex(c);
       onChange(fullHex);
@@ -236,6 +277,7 @@ export default function CustomColorPicker({
   };
 
   const handleEyedropper = async () => {
+    if (disabled) return;
     if ((window as any).EyeDropper) {
       try {
         const eyeDropper = new (window as any).EyeDropper();
@@ -244,48 +286,36 @@ export default function CustomColorPicker({
           selectPresetColor(result.sRGBHex);
         }
       } catch (e) {
-        // user canceled or unsupported
+        // user canceled
       }
     }
   };
 
-  const pureHueHex = hsvToHex(hue, 100, 100);
-  const shouldUseModal = popover || compact;
-
-  // The in-app color studio UI
+  // The rich, colorful mixed-color box studio UI
   const colorStudioBody = (
-    <div className="space-y-3">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between pb-1.5 border-b border-neutral-800">
-        <div className="flex items-center gap-1.5 text-xs font-black text-amber-400 uppercase tracking-wider">
-          <Palette className="w-3.5 h-3.5" />
-          <span>In-App Color Studio</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsOpen(false)}
-          className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-          title="Close Color Studio"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Interactive 2D Saturation/Brightness Gradient Canvas */}
+    <div className="w-full space-y-3 anim-colorpicker">
+      {/* 1. Large 2D Mixed-Color Square Box (Vibrant, colorful, interactive) */}
       <div
         ref={satValRef}
         onPointerDown={handleSatValPointerDown}
         onPointerMove={handleSatValMove}
         onPointerUp={handleSatValPointerUp}
-        className="w-full h-32 rounded-xl relative cursor-crosshair overflow-hidden touch-none select-none shadow-inner border border-white/10"
+        className="color-sat-val-box w-full h-44 sm:h-48 rounded-xl relative cursor-crosshair overflow-hidden touch-none select-none shadow-md border-2 border-black/80 dark:border-white/30"
         style={{
           backgroundColor: pureHueHex,
-          backgroundImage: 'linear-gradient(to right, #fff, transparent), linear-gradient(to top, #000, transparent)'
         }}
       >
-        {/* Pointer handle */}
+        {/* Canvas guarantees gradient rendering with real color pixels */}
+        <canvas
+          ref={canvasRef}
+          width={320}
+          height={200}
+          className="color-box-canvas w-full h-full block pointer-events-none object-cover"
+        />
+
+        {/* High-contrast Draggable Pointer Handle */}
         <div
-          className="w-4 h-4 rounded-full border-2 border-white shadow-lg pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 ring-1 ring-black/50"
+          className="w-5 h-5 rounded-full border-2 border-white shadow-xl pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 ring-2 ring-black"
           style={{
             left: `${sat}%`,
             top: `${100 - val}%`,
@@ -294,176 +324,143 @@ export default function CustomColorPicker({
         />
       </div>
 
-      {/* Hue Spectrum Slider Bar */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-[9px] font-bold text-neutral-400 uppercase tracking-wider">
-          <span>Hue Spectrum</span>
-          <span className="font-mono text-amber-400">{Math.round(hue)}°</span>
-        </div>
+      {/* 2. Rainbow Hue Spectrum Slider Bar */}
+      <div className="w-full space-y-1">
         <input
           type="range"
           min="0"
           max="360"
           step="1"
           value={hue}
+          disabled={disabled}
           onChange={handleHueChange}
-          className="w-full h-4 rounded-lg appearance-none cursor-pointer outline-none border border-white/10"
+          className="color-hue-slider w-full h-4 rounded-full appearance-none cursor-pointer outline-none border border-black/20"
           style={{
             background: 'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)'
           }}
         />
       </div>
 
-      {/* Color Preview & Hex Direct Input */}
-      <div className="flex items-center gap-2 pt-1">
+      {/* 3. Color Preview Swatch, Hex Input & Eyedropper Row */}
+      <div className="flex items-center gap-2">
+        {/* Real Color Preview Square */}
         <div
-          className="w-9 h-9 rounded-xl border border-white/20 shadow-md shrink-0 flex items-center justify-center"
+          className="w-9 h-9 rounded-xl border-2 border-black shadow-sm shrink-0 flex items-center justify-center"
           style={{ backgroundColor: validatedColor }}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-white/70 shadow-sm" />
+          <div className="w-2.5 h-2.5 rounded-full bg-white/80 shadow-sm" />
         </div>
-        
+
+        {/* Hex Direct Input */}
         <div className="flex-1 relative">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500 font-mono text-xs font-bold">#</span>
           <input
             type="text"
             value={hexInput.replace('#', '')}
+            disabled={disabled}
             onChange={handleHexInputChange}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-6 pr-2 py-1.5 text-xs font-mono font-black text-white outline-none focus:border-amber-500/80 uppercase transition-colors"
+            className="w-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl pl-6 pr-2 py-1.5 text-xs font-mono font-black text-black dark:text-white outline-none focus:border-black uppercase transition-colors"
             maxLength={6}
             placeholder="000000"
           />
         </div>
 
+        {/* Eyedropper Button */}
         {(window as any).EyeDropper && (
           <button
             type="button"
+            disabled={disabled}
             onClick={handleEyedropper}
-            className="p-2 bg-neutral-900 hover:bg-neutral-800 text-amber-400 border border-neutral-800 rounded-xl shrink-0 transition-colors active:scale-95 cursor-pointer"
-            title="Eyedropper - Sample color from canvas"
+            className="p-2 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-black dark:text-white border border-neutral-300 dark:border-neutral-700 rounded-xl shrink-0 transition-colors active:scale-95 cursor-pointer shadow-sm"
+            title="Eyedropper - Sample color from screen"
           >
             <Pipette className="w-4 h-4" />
           </button>
         )}
       </div>
 
-      {/* Quick Preset Palette Swatches Grid */}
-      <div className="pt-1 border-t border-neutral-900">
-        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block mb-1.5">
-          Preset Palette
-        </span>
-        <div className="grid grid-cols-8 gap-1">
+      {/* 4. Quick Preset Color Swatches */}
+      <div className="pt-1">
+        <div className="grid grid-cols-8 gap-1.5">
           {PRESET_COLORS.map((c) => {
             const isActive = validatedColor.toLowerCase() === c.toLowerCase();
             return (
               <button
                 key={c}
                 type="button"
+                disabled={disabled}
                 onClick={() => selectPresetColor(c)}
-                className={`h-5 rounded-md border transition-all relative flex items-center justify-center hover:scale-110 active:scale-95 cursor-pointer ${
+                className={`color-swatch-btn h-6 rounded-lg border-2 transition-all relative flex items-center justify-center hover:scale-110 active:scale-95 cursor-pointer ${
                   isActive
-                    ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 z-10'
-                    : 'border-white/10 hover:border-white/40'
+                    ? 'border-black dark:border-white ring-2 ring-black/40 dark:ring-white/40 scale-105 z-10'
+                    : 'border-black/20 dark:border-white/20 hover:border-black/60'
                 }`}
                 style={{ backgroundColor: c }}
                 title={c}
               >
                 {isActive && (
-                  <Check className={`w-3 h-3 ${c === '#FFFFFF' || c === '#FDD835' ? 'text-black' : 'text-white'}`} />
+                  <Check className={`w-3.5 h-3.5 ${c === '#FFFFFF' || c === '#FDD835' ? 'text-black' : 'text-white'}`} />
                 )}
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* Explicit In-App Done Button */}
-      <div className="pt-1">
-        <button
-          type="button"
-          onClick={() => setIsOpen(false)}
-          className="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-neutral-950 text-xs font-black py-2 rounded-xl uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <Check className="w-3.5 h-3.5" />
-          Apply & Close
-        </button>
-      </div>
     </div>
   );
 
+  // If inline (default for full-width panels): render the big mixed-color box directly!
+  if (inline && !compact && !popover) {
+    return (
+      <div className={`anim-colorpicker w-full ${className}`}>
+        {colorStudioBody}
+      </div>
+    );
+  }
+
+  // Compact / Popover mode (for small buttons that trigger the studio in a popup)
   return (
     <div className={`anim-colorpicker ${compact ? 'inline-block' : 'w-full'} ${className}`}>
-      {label && !compact && (
-        <label className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block mb-1">
-          {label}
-        </label>
-      )}
-      
-      {/* Compact Trigger Swatch */}
-      {compact ? (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={`${triggerSize} rounded-lg border border-neutral-700 hover:border-amber-400 p-0.5 transition-all shadow-sm flex items-center justify-center cursor-pointer bg-neutral-900 ${
-            disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'
-          }`}
-          title={label || `Color: ${validatedColor}`}
-        >
-          <div
-            className="w-full h-full rounded border border-white/20 shadow-inner"
-            style={{ backgroundColor: validatedColor }}
-          />
-        </button>
-      ) : (
-        /* Full-Width Trigger Button */
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={`w-full flex items-center justify-between bg-neutral-900 border border-neutral-800 rounded-xl p-2 transition-all shadow-sm ${
-            disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-850 cursor-pointer active:scale-[0.99]'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-6 h-6 rounded-lg border border-white/20 shadow-inner shrink-0"
-              style={{ backgroundColor: validatedColor }}
-            />
-            <span className="text-xs font-mono font-black text-white tracking-widest truncate">
-              {validatedColor.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 text-neutral-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
-              {isOpen ? 'Close' : 'Color'}
-            </span>
-            {isOpen ? <ChevronUp className="w-3.5 h-3.5 text-amber-400" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </div>
-        </button>
-      )}
+      {/* Trigger Button */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`${triggerSize} rounded-xl border-2 border-black dark:border-white/40 p-0.5 transition-all shadow-md flex items-center justify-center cursor-pointer ${
+          disabled ? 'opacity-40 cursor-not-allowed' : 'active:scale-95 hover:scale-105'
+        }`}
+        style={{ background: 'linear-gradient(135deg, #ef4444, #f59e0b, #10b981, #06b6d4, #6366f1, #ec4899)' }}
+        title={label || `Color: ${validatedColor}`}
+      >
+        <div
+          className="w-full h-full rounded-lg border border-white/60 shadow-inner"
+          style={{ backgroundColor: validatedColor }}
+        />
+      </button>
 
-      {/* Render In-App Modal / Popover when Open */}
+      {/* Popover Modal */}
       {isOpen && (
-        shouldUseModal ? (
-          /* Dedicated In-App Modal Backdrop (Eliminates all browser native pickers) */
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-150"
+          onClick={() => setIsOpen(false)}
+        >
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/65 animate-in fade-in duration-150"
-            onClick={() => setIsOpen(false)}
+            className="w-full max-w-[320px] bg-white dark:bg-neutral-950 border-2 border-black dark:border-neutral-700 rounded-2xl p-4 shadow-2xl space-y-3 animate-in zoom-in-95 duration-150 text-black dark:text-white"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="w-full max-w-[280px] bg-neutral-950 border border-neutral-800/90 rounded-2xl p-3.5 shadow-2xl space-y-3 animate-in zoom-in-95 duration-150"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {colorStudioBody}
+            <div className="flex items-center justify-between pb-1 border-b border-neutral-200 dark:border-neutral-800">
+              <span className="text-xs font-black uppercase tracking-wider">Color Studio</span>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          </div>
-        ) : (
-          /* Inline Expandable Body */
-          <div className="mt-2 w-full bg-neutral-950 border border-neutral-800/90 rounded-2xl p-3 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-1 duration-150">
             {colorStudioBody}
           </div>
-        )
+        </div>
       )}
     </div>
   );

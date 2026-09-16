@@ -347,6 +347,7 @@ function RightPanel({
 
   // targetObject is the actual drawing/PNG object to edit (either active view object or standalone selected object)
   const targetObject = activeViewDrawing || selectedObject;
+  const [activeColorMode, setActiveColorMode] = useState<'stroke' | 'fill'>('stroke');
 
   // Deep PNG & Vector Studio Handlers
   const handleExtractPart = (infillColor: string) => {
@@ -3606,10 +3607,9 @@ function RightPanel({
             {/* CONTINUOUS DRAWING CONTROL PANEL */}
             <div className="space-y-4 bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/30 shadow-lg shadow-black/30">
               <div className="flex items-center justify-between border-b border-emerald-500/25 pb-2.5">
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 font-mono">
+                <div className="flex items-center gap-1.5 font-mono">
                   <Feather className="w-4 h-4 text-emerald-400 animate-pulse" />
-                  Continuous Drawing
-                </span>
+                </div>
                 <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${continuousDrawActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse' : 'bg-neutral-850 text-neutral-500 border border-neutral-800'}`}>
                   {continuousDrawActive ? 'ACTIVE' : 'OFF'}
                 </span>
@@ -11037,31 +11037,34 @@ function RightPanel({
                     </div>
                   )}
 
-                  {/* Color Picker Sub-section */}
-                  <div className="pt-2 border-t border-neutral-800/40 space-y-2">
-                    <span className="text-xs text-neutral-400 block font-bold">Stroke & Fill Colors</span>
-                    
-                    {/* Stroke Color */}
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-neutral-500">Stroke Color</span>
-                      <div className="flex items-center gap-2">
-                        <CustomColorPicker
-                          color={selectedObject.strokeColor || '#000000'}
-                          onChange={(c) => updateObject(selectedObject.id, { strokeColor: c })}
-                        />
-                        <input
-                          type="text"
-                          value={selectedObject.strokeColor || ''}
-                          onChange={(e) => updateObject(selectedObject.id, { strokeColor: e.target.value })}
-                          className="bg-neutral-950 border border-neutral-800 text-[10px] px-2 py-1 rounded text-white font-mono w-20 outline-none"
-                        />
-                      </div>
-                    </div>
+                  {/* Color Picker Sub-section - 100% Full Width */}
+                  <div className="pt-2 border-t border-neutral-800/40 space-y-3 w-full">
+                    {/* Mode Selector Tabs: Stroke vs Fill */}
+                    <div className="flex items-center gap-2 p-1 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-300 dark:border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setActiveColorMode('stroke')}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          activeColorMode === 'stroke'
+                            ? 'bg-black text-white dark:bg-white dark:text-black shadow-sm'
+                            : 'text-neutral-500 hover:text-black dark:hover:text-white'
+                        }`}
+                      >
+                        Stroke
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveColorMode('fill')}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          activeColorMode === 'fill'
+                            ? 'bg-black text-white dark:bg-white dark:text-black shadow-sm'
+                            : 'text-neutral-500 hover:text-black dark:hover:text-white'
+                        }`}
+                      >
+                        Fill
+                      </button>
 
-                    {/* Fill Color */}
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-neutral-500">Fill Color</span>
-                      <div className="flex items-center gap-2">
+                      {activeColorMode === 'fill' && (
                         <button
                           type="button"
                           onClick={() => {
@@ -11082,15 +11085,28 @@ function RightPanel({
                               }
                             }
                           }}
-                          className={`text-[9px] px-1.5 py-1 rounded font-bold border ${
+                          className={`text-[10px] px-2.5 py-1.5 rounded-lg font-black uppercase transition-all cursor-pointer border ${
                             selectedObject.fillColor === 'transparent'
-                              ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                              : 'bg-neutral-900 text-neutral-400 border-neutral-800'
+                              ? 'bg-amber-500 text-black border-amber-400 font-black'
+                              : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-300 dark:border-neutral-700'
                           }`}
                         >
                           None
                         </button>
+                      )}
+                    </div>
+
+                    {/* Full Width Color Picker with large colorful mixed-color box */}
+                    <div className="w-full">
+                      {activeColorMode === 'stroke' ? (
                         <CustomColorPicker
+                          inline={true}
+                          color={selectedObject.strokeColor || '#000000'}
+                          onChange={(c) => updateObject(selectedObject.id, { strokeColor: c })}
+                        />
+                      ) : (
+                        <CustomColorPicker
+                          inline={true}
                           disabled={selectedObject.fillColor === 'transparent'}
                           color={selectedObject.fillColor === 'transparent' ? '#ffffff' : (selectedObject.fillColor || '#ffffff')}
                           onChange={(color) => {
@@ -11111,60 +11127,7 @@ function RightPanel({
                             }
                           }}
                         />
-                        <input
-                          type="text"
-                          value={selectedObject.fillColor || ''}
-                          onChange={(e) => {
-                            if (!selectedObject) return;
-                            const color = e.target.value;
-                            const selectedSubMap = globalLassoSelectedMap[selectedObject.id]?.subPaths || {};
-                            if (Object.keys(selectedSubMap).length > 0) {
-                              const allSubs = extractAllSubPaths(selectedObject);
-                              const nextSubPathFills = { ...(selectedObject.subPathFills || {}) };
-                              Object.keys(selectedSubMap).forEach(subIdxStr => {
-                                nextSubPathFills[parseInt(subIdxStr, 10)] = color;
-                              });
-                              updateObject(selectedObject.id, {
-                                subPaths: selectedObject.subPaths && selectedObject.subPaths.length > 0 ? selectedObject.subPaths : allSubs,
-                                subPathFills: nextSubPathFills
-                              });
-                            } else {
-                              updateObject(selectedObject.id, { fillColor: color });
-                            }
-                          }}
-                          className="bg-neutral-950 border border-neutral-800 text-[10px] px-2 py-1 rounded text-white font-mono w-20 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Preset Swatches for Fill Color */}
-                    <div className="flex flex-wrap gap-1.5 pt-1 justify-end">
-                      {['#FF5722', '#4CAF50', '#2196F3', '#9C27B0', '#FFEB3B', '#FF9800', '#000000', '#ffffff'].map(color => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => {
-                            if (!selectedObject) return;
-                            const selectedSubMap = globalLassoSelectedMap[selectedObject.id]?.subPaths || {};
-                            if (Object.keys(selectedSubMap).length > 0) {
-                              const allSubs = extractAllSubPaths(selectedObject);
-                              const nextSubPathFills = { ...(selectedObject.subPathFills || {}) };
-                              Object.keys(selectedSubMap).forEach(subIdxStr => {
-                                nextSubPathFills[parseInt(subIdxStr, 10)] = color;
-                              });
-                              updateObject(selectedObject.id, {
-                                subPaths: selectedObject.subPaths && selectedObject.subPaths.length > 0 ? selectedObject.subPaths : allSubs,
-                                subPathFills: nextSubPathFills
-                              });
-                            } else {
-                              updateObject(selectedObject.id, { fillColor: color });
-                            }
-                          }}
-                          style={{ backgroundColor: color }}
-                          className="w-4 h-4 rounded-full border border-neutral-700 hover:scale-110 active:scale-90 transition-transform"
-                          title={`Set Fill to ${color}`}
-                        />
-                      ))}
+                      )}
                     </div>
                   </div>
 

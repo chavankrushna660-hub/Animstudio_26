@@ -606,7 +606,7 @@ function LeftPanel({
         onClick={() => setOpen(!open)}
         style={{
           position: 'absolute',
-          left: open ? `${(toolbarCollapsed ? 64 : 224) + 256}px` : `${toolbarCollapsed ? 64 : 224}px`,
+          left: open ? `${(toolbarCollapsed ? 96 : 288) + 256}px` : `${toolbarCollapsed ? 96 : 288}px`,
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 100,
@@ -627,7 +627,8 @@ function LeftPanel({
 
       <div
         id="left-layers-panel-container"
-        className={`absolute ${toolbarCollapsed ? 'left-16' : 'left-56'} h-full transition-all duration-200 shrink-0 z-40 overflow-visible pointer-events-none ${
+        style={{ left: `${toolbarCollapsed ? 96 : 288}px` }}
+        className={`absolute h-full transition-all duration-200 shrink-0 z-40 overflow-visible pointer-events-none ${
           open ? 'w-64' : 'w-0'
         }`}
       >
@@ -699,7 +700,6 @@ function LeftPanel({
             <div className="border-2 border-amber-500/40 bg-neutral-950/90 rounded-2xl p-3.5 space-y-3.5 shrink-0 shadow-lg" id="adaptive-subdivision-panel">
               <div className="flex items-center gap-2 text-neutral-300">
                 <Sliders className="w-4.5 h-4.5 stroke-[2.4]" />
-                <span className="text-xs font-black uppercase tracking-wider">Deformation Points Control</span>
               </div>
 
               
@@ -1114,40 +1114,18 @@ function LeftPanel({
                 </div>
 
                 {/* Brush Color & Swatches */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[9px] text-neutral-400 font-bold uppercase">
-                    <span>Stroke Color</span>
-                    <CustomColorPicker
-                      compact
-                      popover
-                      triggerSize="w-6 h-6"
-                      color={brushSettings.strokeColor ?? '#000000'}
-                      onChange={(newCol) => {
-                        try {
-                          setBrushSettings(prev => ({ ...prev, strokeColor: newCol }));
-                        } catch (err) {
-                          console.error('Stroke color error:', err);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {['#000000', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#78716c', '#06b6d4', '#84cc16', '#f43f5e', '#14b8a6'].map(color => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => {
-                          try {
-                            setBrushSettings(prev => ({ ...prev, strokeColor: color }));
-                          } catch (err) {
-                            console.error('Color swatch click error:', err);
-                          }
-                        }}
-                        style={{ backgroundColor: color }}
-                        className={`h-5 rounded-md border ${brushSettings.strokeColor === color ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105' : 'border-neutral-700'} transition-all`}
-                      />
-                    ))}
-                  </div>
+                <div className="space-y-1.5 w-full">
+                  <CustomColorPicker
+                    inline={true}
+                    color={brushSettings.strokeColor ?? '#000000'}
+                    onChange={(newCol) => {
+                      try {
+                        setBrushSettings(prev => ({ ...prev, strokeColor: newCol }));
+                      } catch (err) {
+                        console.error('Stroke color error:', err);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -1917,40 +1895,18 @@ function LeftPanel({
                 </div>
 
                 {/* Brush Color Picker */}
-                <div className="space-y-1.5">
-                  <span className="text-[8.5px] text-neutral-400 font-bold uppercase">Brush Ink Color</span>
-                  <div className="flex items-center gap-2">
-                    <CustomColorPicker
-                      compact
-                      popover
-                      triggerSize="w-8 h-8"
-                      color={brushSettings.strokeColor ?? '#000000'}
-                      onChange={(newCol) => {
-                        try {
-                          setBrushSettings(prev => ({ ...prev, strokeColor: newCol }));
-                        } catch (err) {
-                          console.error('Brush color error:', err);
-                        }
-                      }}
-                    />
-                    <div className="grid grid-cols-6 gap-1 flex-1">
-                      {['#000000', '#ffffff', '#ef4444', '#f59e0b', '#10b981', '#3b82f6'].map(col => (
-                        <button
-                          key={col}
-                          type="button"
-                          onClick={() => {
-                            try {
-                              setBrushSettings(prev => ({ ...prev, strokeColor: col }));
-                            } catch (err) {
-                              console.error('Brush preset color error:', err);
-                            }
-                          }}
-                          style={{ backgroundColor: col }}
-                          className="h-5 rounded border border-neutral-700 hover:scale-105 transition-transform"
-                        />
-                      ))}
-                    </div>
-                  </div>
+                <div className="space-y-1.5 w-full">
+                  <CustomColorPicker
+                    inline={true}
+                    color={brushSettings.strokeColor ?? '#000000'}
+                    onChange={(newCol) => {
+                      try {
+                        setBrushSettings(prev => ({ ...prev, strokeColor: newCol }));
+                      } catch (err) {
+                        console.error('Brush color error:', err);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -1965,9 +1921,6 @@ function LeftPanel({
                     <Cpu className="w-3.5 h-3.5 animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-wider font-sans">ML Geometric Intelligence</span>
                   </div>
-                  <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 font-mono font-bold uppercase border border-purple-500/20">
-                    1000k+ Assets
-                  </span>
                 </div>
 
 
@@ -2171,28 +2124,12 @@ function LeftPanel({
                     </div>
 
                     {/* Color Selection HUD */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-neutral-600 font-extrabold uppercase tracking-widest">Active Fill Color</span>
-                      </div>
+                    <div className="space-y-2 w-full">
                       <CustomColorPicker
+                        inline={true}
                         color={fillToolColor || '#4CAF50'}
                         onChange={(c) => setFillToolColor?.(c)}
                       />
-                      {/* Preset Swatches */}
-                      <div className="grid grid-cols-6 gap-1 pt-1">
-                        {['#E53935', '#D81B60', '#8E24AA', '#5E35B1', '#3949AB', '#1E88E5', '#039BE5', '#00ACC1', '#00897B', '#43A047', '#7CB342', '#FDD835', '#FFB300', '#F4511E', '#6D4C41', '#757575', '#37474F', '#000000'].map(swatch => (
-                          <button
-                            key={swatch}
-                            onClick={() => setFillToolColor?.(swatch)}
-                            style={{ backgroundColor: swatch }}
-                            className={`w-full h-4 rounded-md transition-all border ${
-                              fillToolColor === swatch ? 'border-neutral-950 scale-110 shadow' : 'border-transparent hover:scale-105'
-                            }`}
-                            title={swatch}
-                          />
-                        ))}
-                      </div>
                     </div>
                   </>
                 )}
